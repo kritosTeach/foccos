@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusFlow Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d14;
+      --bg3: #1a1a2e;
+      --card: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.08);
+      --text: #f1f0f8;
+      --text2: #a09db8;
+      --text3: #6b6884;
+      --p1: #a78bfa;
+      --b1: #60a5fa;
+      --b2: #3b82f6;
+      --success: #34d399;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+      --r2: 24px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font); }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 18px;
+    }
+    .top {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+    .head {
+      display:flex; align-items:flex-end; justify-content:space-between; gap: 14px; flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    h1{ font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+    h1 span{
+      background: linear-gradient(90deg, var(--p1), var(--b1));
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .cards { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+    @media (max-width: 900px){ .cards{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    .card{
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--r2);
+      padding: 14px;
+    }
+    .card .k{ font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+    .card .v{ font-size: 20px; font-weight: 900; margin-top: 6px; }
+
+    .auth {
+      max-width: 520px; margin: 30px auto; padding: 18px;
+      background: var(--card); border: 1px solid var(--card-border); border-radius: var(--r2);
+      display:none;
+    }
+    .auth.show{ display:block; }
+    .auth label{ font-size: 12px; color: var(--text3); display:block; margin: 10px 0 6px; }
+    .auth input{
+      width:100%; height:42px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05); color: var(--text);
+      padding: 0 12px; outline:none;
+    }
+    .btn{
+      height:44px; padding: 0 14px; border:none; border-radius: 14px; cursor:pointer;
+      background: linear-gradient(135deg, var(--p1), var(--b2)); color:#fff; font-weight: 900;
+      width:100%; margin-top: 14px;
+    }
+    .btn.secondary{
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .msg{ margin-top: 10px; color: var(--danger); font-size: 12px; min-height: 16px; }
+
+    .toolbar{
+      display:flex; gap: 10px; align-items:center; justify-content:space-between; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .search{
+      display:flex; gap: 10px; align-items:center; flex: 1;
+    }
+    .search input{
+      height:42px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05); color: var(--text);
+      padding: 0 12px; outline:none; width: 100%;
+    }
+
+    .tableWrap{
+      overflow:auto;
+      border-radius: var(--r2);
+      border: 1px solid var(--card-border);
+      background: var(--card);
+    }
+
+    table{ width: 100%; border-collapse: collapse; min-width: 980px; }
+    thead th{
+      position: sticky; top: 0;
+      background: rgba(13,13,20,0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--card-border);
+      font-size: 12px; color: var(--text3);
+      padding: 12px 10px; text-align:left;
+      cursor: pointer;
+      user-select:none;
+      white-space: nowrap;
+    }
+    tbody td{
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 10px; font-size: 12px;
+      color: var(--text2);
+      white-space: nowrap;
+      max-width: 250px;
+      overflow:hidden; text-overflow: ellipsis;
+    }
+    tbody tr:hover{ background: rgba(255,255,255,0.03); }
+
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 4px 10px; border-radius: 999px; font-weight: 900; font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+    }
+    .badge.pro{ border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.12); color: var(--p1); }
+    .badge.subtle{ color: var(--text3); }
+
+    .actions button{
+      height: 32px; padding: 0 10px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      cursor:pointer; font-weight: 900; font-size: 12px;
+      margin-right: 8px;
+    }
+    .actions button.danger{ border-color: rgba(248,113,113,0.35); color: var(--danger); }
+
+    .skeleton{
+      padding: 16px; color: var(--text3); font-size: 12px;
+    }
+
+    .empty{
+      padding: 22px; color: var(--text3); font-size: 13px;
+    }
+
+    /* Modal */
+    .overlay{
+      position: fixed; inset: 0; background: rgba(5,5,11,0.72);
+      display:none; align-items:center; justify-content:center;
+      padding: 18px; z-index: 999;
+    }
+    .overlay.show{ display:flex; }
+    .modal{
+      width: 100%; max-width: 720px;
+      background: rgba(18,18,30,0.95);
+      border: 1px solid var(--card-border);
+      border-radius: var(--r2);
+      padding: 16px;
+      backdrop-filter: blur(20px);
+      position: relative;
+    }
+    .modal h2{ font-size: 16px; font-weight: 900; margin-bottom: 10px; }
+    .grid{
+      display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px;
+    }
+    @media (max-width: 720px){ .grid{ grid-template-columns: 1fr; } }
+    .kv{ background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 10px; }
+    .kv .k{ color: var(--text3); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .kv .v{ color: var(--text2); font-size: 12px; margin-top: 6px; word-break: break-word; }
+    .x{
+      position:absolute; top: 12px; right: 12px;
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05); color: var(--text);
+      cursor:pointer;
+    }
+
+    .hint{
+      color: var(--text3);
+      font-size: 12px;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+  </style>
+
+  <!-- IMPORTANT: Replace with your real credentials -->
+  <script type="module">
+    // Firebase config (placeholders)
+    window.firebaseConfig = {
+      apiKey: "YOUR_API_KEY", // placeholder
+      authDomain: "YOUR_PROJECT.firebaseapp.com", // placeholder
+      projectId: "YOUR_PROJECT_ID", // placeholder
+      storageBucket: "YOUR_PROJECT.appspot.com", // placeholder
+      messagingSenderId: "YOUR_SENDER_ID", // placeholder
+      appId: "YOUR_APP_ID" // placeholder
+    };
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js" type="module"></script>
+</head>
+<body>
+  <div class="top" id="top">
+    <div class="head">
+      <h1>Focus<span>Flow</span> Admin</h1>
+      <div class="hint">Reads from Firestore collection <b>users</b>. Requires admin user doc field <b>isAdmin: true</b>.</div>
+    </div>
+
+    <div class="auth" id="authBox">
+      <h2 style="font-size:16px;font-weight:900;margin-bottom:8px;">Admin Login</h2>
+      <label>Email</label>
+      <input id="adminEmail" type="email" value="admin@focusflow.com" />
+      <label>Password</label>
+      <input id="adminPass" type="password" value="Admin@2025" />
+      <div class="msg" id="authMsg"></div>
+      <button class="btn" id="adminLoginBtn">Login</button>
+      <button class="btn secondary" onclick="window.location.reload()">Refresh</button>
+    </div>
+
+    <div id="dashboard" style="display:none;">
+      <div class="cards">
+        <div class="card"><div class="k">Total Users</div><div class="v" id="kTotal">0</div></div>
+        <div class="card"><div class="k">Premium Users</div><div class="v" id="kPremium">0</div></div>
+        <div class="card"><div class="k">Active Today</div><div class="v" id="kActive">0</div></div>
+        <div class="card"><div class="k">Total Study Hours</div><div class="v" id="kHours">0</div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <input id="searchInput" type="text" placeholder="Search by name or email..." />
+        </div>
+        <button class="btn secondary" id="exportCsvBtn" style="width:auto;padding:0 14px;">Export CSV</button>
+      </div>
+
+      <div class="tableWrap" aria-label="Users table">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="name">#</th>
+              <th data-sort="name">Name</th>
+              <th data-sort="email">Email</th>
+              <th data-sort="provider">Provider</th>
+              <th data-sort="xp">XP</th>
+              <th data-sort="level">Level</th>
+              <th data-sort="streak">Streak</th>
+              <th data-sort="totalStudyMins">Study Time</th>
+              <th data-sort="isPremium">Premium</th>
+              <th data-sort="joinDate">Joined</th>
+              <th data-sort="lastLogin">Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTbody">
+            <tr><td colspan="12"><div class="skeleton">Loading users...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty" id="emptyState" style="display:none;">No users found.</div>
+    </div>
+  </div>
+
+  <!-- View modal -->
+  <div class="overlay" id="viewOverlay">
+    <div class="modal">
+      <button class="x" id="viewClose">✕</button>
+      <h2 id="viewTitle">User</h2>
+      <div class="grid" id="viewGrid"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+    import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, deleteDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+
+    const firebaseConfig = window.firebaseConfig;
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const ADMIN_EMAIL = 'admin@focusflow.com';
+    const ADMIN_PASSWORD = 'Admin@2025';
+
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const searchInput = document.getElementById('searchInput');
+
+    const authBox = document.getElementById('authBox');
+    const dashboard = document.getElementById('dashboard');
+    const authMsg = document.getElementById('authMsg');
+
+    const usersTbody = document.getElementById('usersTbody');
+    const emptyState = document.getElementById('emptyState');
+
+    const kTotal = document.getElementById('kTotal');
+    const kPremium = document.getElementById('kPremium');
+    const kActive = document.getElementById('kActive');
+    const kHours = document.getElementById('kHours');
+
+    const viewOverlay = document.getElementById('viewOverlay');
+    const viewClose = document.getElementById('viewClose');
+    const viewTitle = document.getElementById('viewTitle');
+    const viewGrid = document.getElementById('viewGrid');
+
+    let allUsers = [];
+    let unsubscribe = null;
+
+    function showAuth(){ authBox.classList.add('show'); dashboard.style.display='none'; }
+    function showDashboard(){ authBox.classList.remove('show'); dashboard.style.display='block'; }
+
+    function escapeHtml(v){
+      return String(v ?? '').replace(/[&<>"']/g, (c)=>({ '&':'&amp;','<':'<','>':'>','"':'"',"'":'&#39;' }[c]));
+    }
+
+    function computeLevel(xp){
+      // Simple level model placeholder: 100 XP per level
+      const level = Math.floor((Number(xp) || 0) / 100) + 1;
+      return level;
+    }
+
+    function formatDate(v){
+      if(!v) return '-';
+      try{
+        const d = v.toDate ? v.toDate() : new Date(v);
+        if(isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'});
+      }catch{ return '-'; }
+    }
+
+    function toCsv(rows){
+      const headers = ['uid','name','email','provider','xp','level','streak','totalStudyMins','isPremium','joinDate','lastLogin'];
+      const lines = [headers.join(',')];
+      for(const r of rows){
+        const vals = headers.map(h=>{
+          const v = r[h];
+          const s = v === undefined || v === null ? '' : String(v);
+          return '"' + s.replace(/"/g,'""') + '"';
+        });
+        lines.push(vals.join(','));
+      }
+      return lines.join('\n');
+    }
+
+    function refreshStats(){
+      const total = allUsers.length;
+      const premium = allUsers.filter(u=>!!u.isPremium).length;
+      const todayActive = allUsers.filter(u=>{
+        if(!u.lastLogin) return false;
+        const d = new Date(u.lastLogin);
+        if(isNaN(d.getTime())) return false;
+        const now = new Date();
+        return d.toDateString() === now.toDateString();
+      }).length;
+      const totalStudyHours = allUsers.reduce((sum,u)=>sum + (Number(u.totalStudyMins)||0), 0) / 60;
+
+      kTotal.textContent = String(total);
+      kPremium.textContent = String(premium);
+      kActive.textContent = String(todayActive);
+      kHours.textContent = totalStudyHours.toFixed(1);
+    }
+
+    function renderTable(){
+      const q = (searchInput.value || '').toLowerCase().trim();
+      const filtered = !q ? allUsers : allUsers.filter(u=>{
+        return (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+      });
+
+      if(filtered.length === 0){
+        usersTbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      emptyState.style.display = 'none';
+
+      const rowsHtml = filtered.map((u, i)=>{
+        const idx = i+1;
+        const level = computeLevel(u.xp);
+        const provider = u.provider || 'email';
+        const premiumBadge = u.isPremium ? `<span class="badge pro">⭐ PRO</span>` : `<span class="badge subtle">Free</span>`;
+        const studyTime = `${Math.floor((Number(u.totalStudyMins)||0))} mins`;
+
+        return `
+          <tr>
+            <td>${idx}</td>
+            <td>${escapeHtml(u.name || '-')}</td>
+            <td>${escapeHtml(u.email || '-')}</td>
+            <td>${escapeHtml(provider)}</td>
+            <td>${escapeHtml(u.xp ?? 0)}</td>
+            <td>${escapeHtml(level)}</td>
+            <td>${escapeHtml(u.streak ?? 0)}</td>
+            <td>${escapeHtml(studyTime)}</td>
+            <td>${premiumBadge}</td>
+            <td>${escapeHtml(formatDate(u.joinDate))}</td>
+            <td>${escapeHtml(formatDate(u.lastLogin))}</td>
+            <td class="actions">
+              <button onclick="window.__adminView('${u.uid}')">👁 View</button>
+              <button onclick="window.__adminTogglePremium('${u.uid}')">⭐ Toggle Premium</button>
+              <button class="danger" onclick="window.__adminDelete('${u.uid}')">🗑 Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      usersTbody.innerHTML = rowsHtml;
+    }
+
+    function getUserDocRef(uid){ return doc(db,'users',uid); }
+
+    window.__adminView = async function(uid){
+      const snap = await getDoc(getUserDocRef(uid));
+      const d = snap.exists() ? snap.data() : null;
+      const title = `${d?.name || '-'} (${d?.email || uid})`;
+      viewTitle.textContent = title;
+
+      const keys = [
+        ['uid', uid],
+        ['name', d?.name],
+        ['email', d?.email],
+        ['provider', d?.provider],
+        ['xp', d?.xp],
+        ['streak', d?.streak],
+        ['totalStudyMins', d?.totalStudyMins],
+        ['isPremium', d?.isPremium],
+        ['joinDate', d?.joinDate],
+        ['lastLogin', d?.lastLogin],
+        ['createdAt', d?.createdAt],
+        ['accent', d?.accent],
+        ['goals', d?.goals]
+      ];
+
+      viewGrid.innerHTML = keys.map(([k,v])=>{
+        const valStr = typeof v === 'object' ? JSON.stringify(v) : String(v ?? '-');
+        return `<div class="kv"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(valStr)}</div></div>`;
+      }).join('');
+
+      viewOverlay.classList.add('show');
+    };
+
+    window.__adminTogglePremium = async function(uid){
+      const ref = getUserDocRef(uid);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return;
+      const d = snap.data();
+      await updateDoc(ref, { isPremium: !d.isPremium });
+    };
+
+    window.__adminDelete = async function(uid){
+      const ok = confirm('Delete this user permanently?');
+      if(!ok) return;
+      await deleteDoc(getUserDocRef(uid));
+    };
+
+    viewClose.addEventListener('click', ()=>viewOverlay.classList.remove('show'));
+
+    exportCsvBtn.addEventListener('click', ()=>{
+      const rows = allUsers.map(u=>{
+        return {
+          uid: u.uid,
+          name: u.name,
+          email: u.email,
+          provider: u.provider,
+          xp: u.xp ?? 0,
+          level: computeLevel(u.xp),
+          streak: u.streak ?? 0,
+          totalStudyMins: u.totalStudyMins ?? 0,
+          isPremium: !!u.isPremium,
+          joinDate: u.joinDate ? String(u.joinDate) : '',
+          lastLogin: u.lastLogin ? String(u.lastLogin) : ''
+        };
+      });
+
+      const csv = toCsv(rows);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'focusflow-users.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    searchInput.addEventListener('input', ()=>renderTable());
+
+    document.getElementById('adminLoginBtn').addEventListener('click', async ()=>{
+      authMsg.textContent = '';
+      const email = document.getElementById('adminEmail').value.trim();
+      const pass = document.getElementById('adminPass').value;
+
+      if(email !== ADMIN_EMAIL || pass !== ADMIN_PASSWORD){
+        authMsg.textContent = 'Invalid admin credentials.';
+        return;
+      }
+
+      try{
+        // Verify admin using Firebase Auth
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        const uid = cred.user.uid;
+        const ref = doc(db,'users',uid);
+        const snap = await getDoc(ref);
+        const d = snap.exists() ? snap.data() : null;
+
+        if(!d || !d.isAdmin){
+          authMsg.textContent = 'Access denied: not an admin.';
+          return;
+        }
+
+        showDashboard();
+        authMsg.textContent = '';
+
+        // Real-time listener
+        unsubscribe && unsubscribe();
+        const usersCol = collection(db,'users');
+        unsubscribe = onSnapshot(usersCol, (snap)=>{
+          allUsers = [];
+          snap.forEach(docSnap=>{
+            const data = docSnap.data() || {};
+            allUsers.push({
+              uid: docSnap.id,
+              name: data.name,
+              email: data.email,
+              provider: data.provider,
+              xp: data.xp,
+              streak: data.streak,
+              totalStudyMins: data.totalStudyMins,
+              isPremium: data.isPremium,
+              joinDate: data.joinDate,
+              lastLogin: data.lastLogin,
+            });
+          });
+          refreshStats();
+          renderTable();
+        }, (err)=>{
+          usersTbody.innerHTML = `<tr><td colspan="12"><div class="empty">Failed to load users: ${escapeHtml(err?.message || err)}</div></td></tr>`;
+        });
+      }catch(e){
+        authMsg.textContent = 'Login failed. Check Firebase auth / configuration.';
+        console.error(e);
+      }
+    });
+
+    // Default: show auth form
+    showAuth();
+  </script>
+</body>
+</html>
+
